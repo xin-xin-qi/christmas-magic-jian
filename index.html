@@ -739,13 +739,29 @@
             cameraUtils.start();
         }
         
-        function showRandomPhoto() {
-            if(loadedImages.length === 0) return;
-            const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
-            const modal = document.getElementById('photo-modal');
-            document.getElementById('modal-img').src = img.src;
-            modal.classList.add('active');
+       function showRandomPhoto() {
+    if(loadedImages.length === 0) return;
+    
+    // 1. 先尝试获取预加载的原始图片
+    const preloadedDiv = document.getElementById('preloaded-photos');
+    if(preloadedDiv) {
+        const originalImgs = preloadedDiv.getElementsByTagName('img');
+        if(originalImgs.length > 0) {
+            // 随机选择一张原始图片
+            const randomIndex = Math.floor(Math.random() * originalImgs.length);
+            const originalImg = originalImgs[randomIndex];
+            
+            document.getElementById('modal-img').src = originalImg.src;
+            document.getElementById('photo-modal').classList.add('active');
+            return; // 重要：找到就返回，不再执行后面的代码
         }
+    }
+    
+    // 2. 如果没有预加载图片（理论上不会到这里），使用原来的逻辑
+    const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
+    document.getElementById('modal-img').src = img.src;
+    document.getElementById('photo-modal').classList.add('active');
+}
         
         function setupUI() {
             // 全屏按钮
@@ -882,3 +898,4 @@
     </script>
 </body>
 </html>
+
