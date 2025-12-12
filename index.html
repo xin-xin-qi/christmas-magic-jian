@@ -442,4 +442,37 @@
         }
         function showRandomPhoto() { if(loadedImages.length === 0) return; const img = loadedImages[Math.floor(Math.random() * loadedImages.length)]; const modal = document.getElementById('photo-modal'); document.getElementById('modal-img').src = img.src; modal.classList.add('active'); }
         function setupUI() {
-            const fsBtn
+            const fsBtn = document.getElementById('btn-fullscreen');
+            fsBtn.addEventListener('click', () => { if(!document.fullscreenElement) { document.documentElement.requestFullscreen(); fsBtn.innerText="❌ 退出全屏模式"; } else { document.exitFullscreen(); fsBtn.innerText="⛶ 进入全屏模式"; } });
+            document.getElementById('btn-toggle-cam').addEventListener('click', () => { document.getElementById('input_video').classList.toggle('hidden-cam'); });
+            document.getElementById('bg-select').addEventListener('change', (e) => document.body.className = 'bg-'+e.target.value);
+            document.getElementById('toggle-btn').addEventListener('click', () => document.getElementById('ui-panel').classList.toggle('hidden'));
+            document.getElementById('rot-speed').addEventListener('input', (e) => { state.rotationSpeed = parseFloat(e.target.value); document.getElementById('val-rot').innerText = state.rotationSpeed.toFixed(3); });
+            document.getElementById('music-input').addEventListener('change', (e) => { if(e.target.files[0]) { audioEl.src = URL.createObjectURL(e.target.files[0]); audioEl.play(); } });
+            document.getElementById('btn-play-pause').addEventListener('click', () => { if(audioEl.paused) { audioEl.play(); document.getElementById('btn-play-pause').innerText="⏸"; } else { audioEl.pause(); document.getElementById('btn-play-pause').innerText="▶"; } });
+            document.getElementById('volume-slider').addEventListener('input', (e) => audioEl.volume = e.target.value);
+            document.getElementById('folder-input').addEventListener('change', (e) => { const files = Array.from(e.target.files); loadedImages = []; files.forEach(f => { const r = new FileReader(); r.onload=ev=>{ const i=new Image(); i.onload=()=>loadedImages.push(i)===Math.min(files.length,30)&&updatePhotos(); i.src=ev.target.result; }; r.readAsDataURL(f); }); });
+            document.getElementById('tree-height').addEventListener('input', (e) => { state.treeHeight = parseInt(e.target.value); createParticles(); if(topDecoration) topDecoration.position.y = state.treeHeight; });
+            document.getElementById('beat-sense').addEventListener('input', (e) => document.getElementById('beat-sense').value = e.target.value );
+            const switchTheme = (type) => {
+                state.style = type;
+                const title = document.getElementById('main-title');
+                if(type === 'xmas') {
+                    title.innerText = 'Merry Christmas'; title.className = 'title-xmas';
+                    document.body.className = 'bg-black'; document.getElementById('bg-select').value = 'black';
+                    document.getElementById('theme-xmas').classList.add('active'); document.getElementById('theme-cny').classList.remove('active');
+                } else {
+                    title.innerText = '新春快乐 万事如意'; title.className = 'title-cny';
+                    document.body.className = 'bg-china'; document.getElementById('bg-select').value = 'china';
+                    document.getElementById('theme-cny').classList.add('active'); document.getElementById('theme-xmas').classList.remove('active');
+                }
+                createParticles();
+                createTopObject();
+                if(loadedImages.length > 0) updatePhotos();
+            };
+            document.getElementById('theme-xmas').addEventListener('click', () => switchTheme('xmas'));
+            document.getElementById('theme-cny').addEventListener('click', () => switchTheme('cny'));
+        }
+    </script>
+</body>
+</html>
