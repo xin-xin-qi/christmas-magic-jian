@@ -135,6 +135,42 @@
         <div id="photo-caption">Sweet Memory</div>
     </div>
 
+    <!-- 预加载照片（隐藏，但会被JS加载） -->
+    <div id="preloaded-photos" style="display:none;">
+        <!-- =============== 你的30张照片链接 =============== -->
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513700.jpg" alt="我的照片 1">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513796.jpg" alt="我的照片 2">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513800.jpg" alt="我的照片 3">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513810.jpg" alt="我的照片 4">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513822.jpg" alt="我的照片 5">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513842.jpg" alt="我的照片 6">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513849.jpg" alt="我的照片 7">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513861.jpg" alt="我的照片 8">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513873.jpg" alt="我的照片 9">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513928.jpg" alt="我的照片 10">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513934.jpg" alt="我的照片 11">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513945.jpg" alt="我的照片 12">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513960.jpg" alt="我的照片 13">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254018.jpg" alt="我的照片 14">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254064.jpg" alt="我的照片 15">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254078.jpg" alt="我的照片 16">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254081.jpg" alt="我的照片 17">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254133.jpg" alt="我的照片 18">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254153.jpg" alt="我的照片 19">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254167.jpg" alt="我的照片 20">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254175.jpg" alt="我的照片 21">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254178.jpg" alt="我的照片 22">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254183.jpg" alt="我的照片 23">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254229.jpg" alt="我的照片 24">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254236.jpg" alt="我的照片 25">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254247.jpg" alt="我的照片 26">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254265.jpg" alt="我的照片 27">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254281.jpg" alt="我的照片 28">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254291.jpg" alt="我的照片 29">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254312.jpg" alt="我的照片 30">
+        <!-- ====================================================== -->
+    </div>
+
     <button id="toggle-btn">⚙️</button>
     <video id="input_video" class="hidden-cam"></video>
 
@@ -279,6 +315,26 @@
             createTopObject();
             createSnow();
             animate();
+            
+            // === 新增：页面加载后自动预加载照片 ===
+            setTimeout(() => {
+                const preloaded = document.getElementById('preloaded-photos');
+                if(preloaded) {
+                    const imgs = preloaded.getElementsByTagName('img');
+                    for(let img of imgs) {
+                        const newImg = new Image();
+                        newImg.src = img.src;
+                        newImg.onload = () => {
+                            loadedImages.push(newImg);
+                            // 当所有图片加载完成后，自动挂载到树上
+                            if(loadedImages.length === imgs.length) {
+                                console.log(`已预加载 ${loadedImages.length} 张照片`);
+                                updatePhotos();
+                            }
+                        };
+                    }
+                }
+            }, 1000);
         }
 
         // === 1. 核心：根据风格生成粒子 ===
@@ -411,7 +467,11 @@
                 mesh.userData = { origin: origin, explodePos: explodeDir, imgSrc: img.src };
                 treeGroup.add(mesh); photoMeshes.push(mesh);
             });
-            alert(`已挂载 ${loadedImages.length} 张照片`);
+            // 修改：不弹窗提示，改为在状态栏显示
+            document.getElementById('status-bar').innerText = `已挂载 ${loadedImages.length} 张照片到圣诞树上`;
+            setTimeout(() => {
+                document.getElementById('status-bar').innerText = "等待双手识别...";
+            }, 3000);
         }
 
         function animate() {
