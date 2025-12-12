@@ -4,40 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merry Christmas & Happy New Year</title>
-    <!-- 引入英文字体 (Great Vibes) 和 中文字体 (Ma Shan Zheng) -->
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; transition: background 1s ease; }
-        
-        /* 背景样式 */
         body.bg-black { background: #000; }
         body.bg-deep { background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%); }
         body.bg-warm { background: radial-gradient(circle at center, #2e1a1a 0%, #0f0505 100%); }
         body.bg-aurora { background: radial-gradient(circle at top, #0f2027 0%, #203a43 50%, #2c5364 100%); }
-        /* 新增：中国红背景 */
         body.bg-china { background: radial-gradient(circle at center, #4a0000 0%, #1a0000 100%); }
-
-        /* 标题 */
         #main-title {
             position: absolute; top: 20px; left: 0; width: 100%;
             text-align: center; z-index: 50; pointer-events: none; opacity: 0; transition: opacity 1s;
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             text-shadow: 0 0 20px rgba(255,215,0,0.3);
         }
-        /* 圣诞标题样式 */
         .title-xmas {
             font-family: 'Great Vibes', cursive; font-size: 5rem;
             background: linear-gradient(to bottom, #ffd700, #ffec8b);
         }
-        /* 中式标题样式 */
         .title-cny {
             font-family: 'Ma Shan Zheng', cursive; font-size: 5rem;
             background: linear-gradient(to bottom, #ff3333, #ffd700);
             text-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
             letter-spacing: 10px;
         }
-
-        /* 启动页 */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 200; display: flex; flex-direction: column;
@@ -49,8 +39,6 @@
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); margin-top: 30px; transition: transform 0.2s;
         }
         #btn-start:hover { transform: scale(1.05); }
-
-        /* 照片弹窗 */
         #photo-modal {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
             max-width: 80%; max-height: 80%; background: #fff; padding: 10px 10px 40px 10px;
@@ -61,15 +49,11 @@
         #photo-modal.active { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-3deg); }
         #photo-modal img { max-width: 100%; max-height: 60vh; display: block; }
         #photo-caption { text-align: center; color: #333; font-family: 'Great Vibes', cursive; font-size: 2rem; margin-top: 5px; }
-
-        /* 状态栏 */
         #status-bar {
             position: absolute; bottom: 20px; width: 100%; text-align: center;
             color: rgba(255,255,255,0.7); font-size: 14px; text-shadow: 0 2px 4px #000; pointer-events: none;
             background: rgba(0,0,0,0.3); padding: 5px 0; z-index: 95;
         }
-
-        /* UI 面板 */
         #ui-panel {
             position: absolute; top: 100px; right: 20px; width: 280px;
             max-height: 80vh; overflow-y: auto;
@@ -79,24 +63,19 @@
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         #ui-panel.hidden { transform: translateX(130%); }
-        
         .control-group { margin-bottom: 10px; }
         .control-group label { display: flex; justify-content: space-between; font-size: 11px; color: #ccc; margin-bottom: 4px; }
         input[type=range] { width: 100%; accent-color: #ffd700; cursor: pointer; }
         .btn { width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; cursor: pointer; border-radius: 6px; font-size: 12px; margin-bottom: 5px; }
         .btn:hover { background: rgba(255,255,255,0.2); }
-        /* 选中主题按钮样式 */
         .btn.active { background: linear-gradient(90deg, #ff7675, #d63031); border:none; font-weight:bold; }
-        
         select { width: 100%; padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; }
-
         #toggle-btn {
             position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
             background: rgba(255,255,255,0.1); border-radius: 50%; color: #fff;
             border: 1px solid rgba(255,255,255,0.2); cursor: pointer; z-index: 101;
             display: flex; justify-content: center; align-items: center; font-size: 18px;
         }
-
         #input_video {
             position: absolute; bottom: 20px; left: 20px;
             width: 200px; height: 150px;
@@ -110,17 +89,13 @@
         }
         #input_video.hidden-cam { opacity: 0; pointer-events: none; }
     </style>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 </head>
 <body class="bg-black">
-
     <div id="main-title" class="title-xmas">Merry Christmas</div>
     <div id="status-bar">系统初始化中...</div>
-
-    <!-- 启动页 -->
     <div id="start-screen">
         <h1 style="font-family: 'Great Vibes'; font-size: 4rem; color: #ffd700; margin: 0;">Magic Holiday</h1>
         <div style="margin-top:20px; text-align:center; color:#aaa; font-size:16px; line-height:1.8;">
@@ -129,28 +104,25 @@
         </div>
         <button id="btn-start">开始体验 ✨</button>
     </div>
-
     <div id="photo-modal">
         <img id="modal-img" src="" alt="Memory">
         <div id="photo-caption">Sweet Memory</div>
     </div>
-
     <!-- 预加载照片（隐藏，但会被JS加载） -->
     <div id="preloaded-photos" style="display:none;">
-        <!-- =============== 你的30张照片链接 =============== -->
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513700.jpg" alt="我的照片 1">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513796.jpg" alt="我的照片 2">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513800.jpg" alt="我的照片 3">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513810.jpg" alt="我的照片 4">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513822.jpg" alt="我的照片 5">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513842.jpg" alt="我的照片 6">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513849.jpg" alt="我的照片 7">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513861.jpg" alt="我的照片 8">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513873.jpg" alt="我的照片 9">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513928.jpg" alt="我的照片 10">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513934.jpg" alt="我的照片 11">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513945.jpg" alt="我的照片 12">
-        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D2513960.jpg" alt="我的照片 13">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3700.jpg" alt="我的照片 1">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3796.jpg" alt="我的照片 2">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3800.jpg" alt="我的照片 3">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3810.jpg" alt="我的照片 4">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3822.jpg" alt="我的照片 5">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3842.jpg" alt="我的照片 6">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3849.jpg" alt="我的照片 7">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3861.jpg" alt="我的照片 8">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3873.jpg" alt="我的照片 9">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3928.jpg" alt="我的照片 10">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3934.jpg" alt="我的照片 11">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3945.jpg" alt="我的照片 12">
+        <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D25I3960.jpg" alt="我的照片 13">
         <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254018.jpg" alt="我的照片 14">
         <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254064.jpg" alt="我的照片 15">
         <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254078.jpg" alt="我的照片 16">
@@ -168,22 +140,14 @@
         <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254281.jpg" alt="我的照片 28">
         <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254291.jpg" alt="我的照片 29">
         <img src="https://raw.githubusercontent.com/xin-xin-qi/christmas-magic-jian/main/photos/D254312.jpg" alt="我的照片 30">
-        <!-- ====================================================== -->
     </div>
-
     <button id="toggle-btn">⚙️</button>
     <video id="input_video" class="hidden-cam"></video>
-
-    <!-- 控制面板 -->
     <div id="ui-panel">
         <h3 style="margin:0 0 15px 0; color:#ffd700; border-bottom:1px solid #444; padding-bottom:10px;">🎨 风格与控制</h3>
-        
-        <!-- 全屏按钮 -->
         <div class="control-group">
             <button id="btn-fullscreen" class="btn">⛶ 进入全屏模式</button>
         </div>
-
-        <!-- 主题切换 -->
         <div class="control-group">
             <label style="color:#ffd700; font-weight:bold; margin-bottom:8px;">选择主题风格</label>
             <div style="display:flex; gap:10px;">
@@ -191,12 +155,10 @@
                 <button id="theme-cny" class="btn">🧧 新春</button>
             </div>
         </div>
-
         <div class="control-group">
             <label>辅助显示</label>
             <button id="btn-toggle-cam" class="btn" style="background:rgba(255,255,255,0.15)">📹 显示/隐藏 摄像头</button>
         </div>
-
         <div class="control-group">
             <label>背景颜色</label>
             <select id="bg-select">
@@ -207,7 +169,6 @@
                 <option value="china">🧧 中国红 (China Red)</option>
             </select>
         </div>
-        
         <div class="control-group">
             <label>背景音乐</label>
             <button class="btn" onclick="document.getElementById('music-input').click()">📁 换音乐 (MP3)</button>
@@ -217,13 +178,11 @@
                 <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.6">
             </div>
         </div>
-
         <div class="control-group">
             <label>照片管理</label>
             <button class="btn" style="background:linear-gradient(90deg, #00b894, #00cec9); color:black; font-weight:bold;" onclick="document.getElementById('folder-input').click()">📷 导入照片 (多选)</button>
             <input type="file" id="folder-input" multiple accept="image/*" style="display:none;">
         </div>
-
         <div class="control-group">
             <label>旋转速度 <span id="val-rot">0.002</span></label>
             <input type="range" id="rot-speed" min="0" max="0.02" step="0.001" value="0.002">
@@ -237,8 +196,6 @@
             <input type="range" id="beat-sense" min="0.1" max="3.0" step="0.1" value="1.0">
         </div>
     </div>
-
-    <!-- Shader -->
     <script type="x-shader/x-vertex" id="vertexshader">
         attribute float size; attribute vec3 customColor; attribute vec3 spherePos; attribute float type;     
         varying vec3 vColor; varying float vType;
@@ -272,18 +229,15 @@
             gl_FragColor = vec4(color, alpha);
         }
     </script>
-
     <script>
         const state = { 
             explosion: 0.0, targetExplosion: 0.0, photoActive: false, treeHeight: 70, rotationSpeed: 0.002,
-            style: 'xmas' // 'xmas' or 'cny'
+            style: 'xmas'
         };
-
         let scene, camera, renderer, clock;
         let particleSystem, treeGroup, topDecoration;
         let photoMeshes = [], loadedImages = [];
         let audioCtx, analyser, dataArray, audioEl;
-        
         document.getElementById('btn-start').addEventListener('click', () => {
             const screen = document.getElementById('start-screen');
             screen.style.opacity = 0; setTimeout(() => screen.remove(), 1000);
@@ -291,7 +245,6 @@
             document.getElementById('input_video').classList.remove('hidden-cam');
             initAudio(); initThree(); setupUI(); startHandTracking();
         });
-
         function initAudio() {
             audioEl = new Audio(); audioEl.crossOrigin = "anonymous";
             audioEl.src = "https://thirdparty.gtimg.com/C1000007bNrR1HXkjD.m4a?fromtag=38"; audioEl.loop = true;
@@ -300,7 +253,6 @@
             const source = audioCtx.createMediaElementSource(audioEl); source.connect(analyser); analyser.connect(audioCtx.destination);
             audioEl.play().catch(e => console.log(e));
         }
-
         function initThree() {
             clock = new THREE.Clock(); scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x000000, 0.004);
             camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -309,14 +261,10 @@
             renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
             treeGroup = new THREE.Group(); scene.add(treeGroup);
-            
-            // 初始生成
             createParticles();
             createTopObject();
             createSnow();
             animate();
-            
-            // === 新增：页面加载后自动预加载照片 ===
             setTimeout(() => {
                 const preloaded = document.getElementById('preloaded-photos');
                 if(preloaded) {
@@ -326,18 +274,18 @@
                         newImg.src = img.src;
                         newImg.onload = () => {
                             loadedImages.push(newImg);
-                            // 当所有图片加载完成后，自动挂载到树上
                             if(loadedImages.length === imgs.length) {
                                 console.log(`已预加载 ${loadedImages.length} 张照片`);
                                 updatePhotos();
                             }
                         };
+                        newImg.onerror = () => {
+                            console.log(`加载失败: ${img.src}`);
+                        };
                     }
                 }
             }, 1000);
         }
-
-        // === 1. 核心：根据风格生成粒子 ===
         function createParticles() {
             if(particleSystem) { treeGroup.remove(particleSystem); particleSystem.geometry.dispose(); }
             const count = 18000;
@@ -345,35 +293,27 @@
             const positions = [], spherePos = [], colors = [], sizes = [], types = [];
             const h = state.treeHeight;
             const colorHelper = new THREE.Color();
-
             for(let i=0; i<count; i++) {
                 const y = (i/count) * h;
                 const rBase = (1 - y/h) * (h*0.4);
                 const angle = i * 0.2;
                 const r = rBase * Math.sqrt(Math.random());
                 positions.push(Math.cos(angle)*r, y - 10, Math.sin(angle)*r);
-
                 const v = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize();
                 v.multiplyScalar(40 + Math.random()*50);
                 spherePos.push(v.x, v.y + 20, v.z);
-
                 const rnd = Math.random();
-                let type = 0; // 0=主体, 1=球/灯笼, 2=光点
-
-                // === 风格化配色逻辑 ===
+                let type = 0;
                 if (state.style === 'cny') {
-                    // --- 中式风格 (金树红灯笼) ---
                     if(rnd > 0.95) { 
-                        type = 2; sizes.push(4); colorHelper.setHex(0xffd700); // 金色光点
+                        type = 2; sizes.push(4); colorHelper.setHex(0xffd700);
                     } else if(rnd > 0.85) { 
-                        type = 1; sizes.push(5); colorHelper.setHex(0xff0000); // 红色灯笼粒子
+                        type = 1; sizes.push(5); colorHelper.setHex(0xff0000);
                     } else { 
                         type = 0; sizes.push(1.5); 
-                        // 金色树体
                         if(Math.random()>0.5) colorHelper.setHex(0xffcc00); else colorHelper.setHex(0xffaa00);
                     }
                 } else {
-                    // --- 圣诞风格 (绿树彩球) ---
                     if(rnd > 0.96) { 
                         type = 2; sizes.push(4); colorHelper.setHex(0xffaa00); 
                     } else if(rnd > 0.92) { 
@@ -382,17 +322,14 @@
                         type = 0; sizes.push(1.5); colorHelper.setHex(0x228b22); 
                     }
                 }
-                
                 types.push(type);
                 colors.push(colorHelper.r, colorHelper.g, colorHelper.b);
             }
-
             geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
             geo.setAttribute('spherePos', new THREE.Float32BufferAttribute(spherePos, 3));
             geo.setAttribute('customColor', new THREE.Float32BufferAttribute(colors, 3));
             geo.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
             geo.setAttribute('type', new THREE.Float32BufferAttribute(types, 1));
-
             state.uniforms = { uTime: { value: 0 }, uExplosion: { value: 0 }, uBeat: { value: 0 } };
             const mat = new THREE.ShaderMaterial({
                 uniforms: state.uniforms, vertexShader: document.getElementById('vertexshader').textContent,
@@ -402,47 +339,35 @@
             particleSystem = new THREE.Points(geo, mat);
             treeGroup.add(particleSystem);
         }
-
-        // === 2. 核心：顶部装饰切换 (星 vs 灯笼) ===
         function createTopObject() {
             if(topDecoration) { treeGroup.remove(topDecoration); }
-            
             if(state.style === 'xmas') {
-                // --- 圣诞五角星 ---
                 const s=new THREE.Shape(); const p=5; for(let i=0;i<p*2;i++){ const r=(i%2===0)?4:2; const a=i/p*Math.PI; s.lineTo(Math.cos(a)*r,Math.sin(a)*r); }
                 const g=new THREE.ExtrudeGeometry(s,{depth:1,bevelEnabled:true,bevelThickness:0.5,bevelSize:0.2});
                 topDecoration=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xffdd00}));
             } else {
-                // --- 中式大红灯笼 ---
                 topDecoration = new THREE.Group();
-                // 灯笼主体
                 const sphere = new THREE.Mesh(new THREE.SphereGeometry(3.5, 32, 32), new THREE.MeshBasicMaterial({color: 0xff0000}));
                 sphere.scale.set(1, 0.8, 1);
-                // 上下金色盖子
                 const cap1 = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 0.5, 32), new THREE.MeshBasicMaterial({color: 0xffd700}));
                 cap1.position.y = 2.6;
                 const cap2 = cap1.clone(); cap2.position.y = -2.6;
-                // 流苏 (鞭炮风格)
                 const tasselGeo = new THREE.CylinderGeometry(0.2, 0.2, 8, 8);
                 const tasselMat = new THREE.MeshBasicMaterial({color: 0xff3300});
                 const t1 = new THREE.Mesh(tasselGeo, tasselMat); t1.position.set(0, -6, 0);
                 const t2 = t1.clone(); t2.position.set(1, -6, 0); t2.rotation.z=0.2;
                 const t3 = t1.clone(); t3.position.set(-1, -6, 0); t3.rotation.z=-0.2;
-                
                 topDecoration.add(sphere, cap1, cap2, t1, t2, t3);
             }
-            
             topDecoration.position.y = state.treeHeight;
             treeGroup.add(topDecoration);
         }
-
         function createSnow() {
             const g=new THREE.BufferGeometry(); const pos=[]; for(let i=0;i<1000;i++) pos.push((Math.random()-0.5)*200,Math.random()*150,(Math.random()-0.5)*200);
             g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
             window.snowSystem=new THREE.Points(g,new THREE.PointsMaterial({color:0xffffff,size:0.6,transparent:true,opacity:0.6}));
             scene.add(window.snowSystem);
         }
-
         function updatePhotos() {
             photoMeshes.forEach(m => treeGroup.remove(m)); photoMeshes = [];
             if(loadedImages.length === 0) return;
@@ -451,12 +376,9 @@
                 ctx.beginPath(); ctx.arc(128,128,120,0,Math.PI*2); ctx.clip();
                 const asp = img.width/img.height;
                 if(asp>1) ctx.drawImage(img, (img.width-img.height)/2, 0, img.height, img.height, 0,0,256,256); else ctx.drawImage(img, 0, (img.height-img.width)/2, img.width, img.width, 0,0,256,256);
-                
-                // 风格化边框
                 ctx.lineWidth=10; 
-                ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff'; // 金边 vs 白边
+                ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff';
                 ctx.stroke();
-                
                 const mesh = new THREE.Mesh(new THREE.PlaneGeometry(6,6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cvs), side: THREE.DoubleSide, transparent:true }));
                 const y = Math.random() * (state.treeHeight * 0.8);
                 const r = (1 - y/state.treeHeight) * (state.treeHeight*0.4) + 2; 
@@ -467,29 +389,21 @@
                 mesh.userData = { origin: origin, explodePos: explodeDir, imgSrc: img.src };
                 treeGroup.add(mesh); photoMeshes.push(mesh);
             });
-            // 修改：不弹窗提示，改为在状态栏显示
             document.getElementById('status-bar').innerText = `已挂载 ${loadedImages.length} 张照片到圣诞树上`;
             setTimeout(() => {
                 document.getElementById('status-bar').innerText = "等待双手识别...";
             }, 3000);
         }
-
         function animate() {
             requestAnimationFrame(animate); const t = clock.getElapsedTime();
             let beat = 0; if(analyser) { analyser.getByteFrequencyData(dataArray); let sum = 0; for(let i=0; i<15; i++) sum+=dataArray[i]; beat = (sum/15/255) * parseFloat(document.getElementById('beat-sense').value); }
             if(state.uniforms) { state.uniforms.uTime.value = t; state.uniforms.uBeat.value = beat; state.explosion += (state.targetExplosion - state.explosion) * 0.05; state.uniforms.uExplosion.value = state.explosion; }
-            
             const ease = 1.0 - Math.pow(1.0 - state.explosion, 3.0);
             photoMeshes.forEach(p => { p.position.lerpVectors(p.userData.origin, p.userData.explodePos, ease); p.lookAt(camera.position); p.rotation.z += 0.005 * (1 + state.explosion * 5); });
-            
             treeGroup.rotation.y += state.rotationSpeed + state.explosion * 0.01;
-            
             if(topDecoration) {
-                if(state.style === 'xmas') topDecoration.rotation.y -= 0.02; // 星星旋转
-                else {
-                    // 灯笼摆动
-                    topDecoration.rotation.z = Math.sin(t * 2) * 0.1;
-                }
+                if(state.style === 'xmas') topDecoration.rotation.y -= 0.02;
+                else { topDecoration.rotation.z = Math.sin(t * 2) * 0.1; }
                 const s = 1 + beat * 0.3; topDecoration.scale.set(s,s,s);
             }
             if(window.snowSystem) {
@@ -499,7 +413,6 @@
             }
             renderer.render(scene, camera);
         }
-
         function startHandTracking() {
             const video = document.getElementById('input_video');
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
@@ -528,43 +441,5 @@
             cameraUtils.start();
         }
         function showRandomPhoto() { if(loadedImages.length === 0) return; const img = loadedImages[Math.floor(Math.random() * loadedImages.length)]; const modal = document.getElementById('photo-modal'); document.getElementById('modal-img').src = img.src; modal.classList.add('active'); }
-
         function setupUI() {
-            const fsBtn = document.getElementById('btn-fullscreen');
-            fsBtn.addEventListener('click', () => { if(!document.fullscreenElement) { document.documentElement.requestFullscreen(); fsBtn.innerText="❌ 退出全屏模式"; } else { document.exitFullscreen(); fsBtn.innerText="⛶ 进入全屏模式"; } });
-            document.getElementById('btn-toggle-cam').addEventListener('click', () => { document.getElementById('input_video').classList.toggle('hidden-cam'); });
-            document.getElementById('bg-select').addEventListener('change', (e) => document.body.className = 'bg-'+e.target.value);
-            document.getElementById('toggle-btn').addEventListener('click', () => document.getElementById('ui-panel').classList.toggle('hidden'));
-            document.getElementById('rot-speed').addEventListener('input', (e) => { state.rotationSpeed = parseFloat(e.target.value); document.getElementById('val-rot').innerText = state.rotationSpeed.toFixed(3); });
-            document.getElementById('music-input').addEventListener('change', (e) => { if(e.target.files[0]) { audioEl.src = URL.createObjectURL(e.target.files[0]); audioEl.play(); } });
-            document.getElementById('btn-play-pause').addEventListener('click', () => { if(audioEl.paused) { audioEl.play(); document.getElementById('btn-play-pause').innerText="⏸"; } else { audioEl.pause(); document.getElementById('btn-play-pause').innerText="▶"; } });
-            document.getElementById('volume-slider').addEventListener('input', (e) => audioEl.volume = e.target.value);
-            document.getElementById('folder-input').addEventListener('change', (e) => { const files = Array.from(e.target.files); loadedImages = []; files.forEach(f => { const r = new FileReader(); r.onload=ev=>{ const i=new Image(); i.onload=()=>loadedImages.push(i)===Math.min(files.length,30)&&updatePhotos(); i.src=ev.target.result; }; r.readAsDataURL(f); }); });
-            document.getElementById('tree-height').addEventListener('input', (e) => { state.treeHeight = parseInt(e.target.value); createParticles(); if(topDecoration) topDecoration.position.y = state.treeHeight; });
-            document.getElementById('beat-sense').addEventListener('input', (e) => document.getElementById('beat-sense').value = e.target.value );
-
-            // === 主题切换逻辑 ===
-            const switchTheme = (type) => {
-                state.style = type;
-                const title = document.getElementById('main-title');
-                if(type === 'xmas') {
-                    title.innerText = 'Merry Christmas'; title.className = 'title-xmas';
-                    document.body.className = 'bg-black'; document.getElementById('bg-select').value = 'black';
-                    document.getElementById('theme-xmas').classList.add('active'); document.getElementById('theme-cny').classList.remove('active');
-                } else {
-                    title.innerText = '新春快乐 万事如意'; title.className = 'title-cny';
-                    document.body.className = 'bg-china'; document.getElementById('bg-select').value = 'china';
-                    document.getElementById('theme-cny').classList.add('active'); document.getElementById('theme-xmas').classList.remove('active');
-                }
-                // 重建场景
-                createParticles();
-                createTopObject();
-                if(loadedImages.length > 0) updatePhotos(); // 刷新照片边框颜色
-            };
-
-            document.getElementById('theme-xmas').addEventListener('click', () => switchTheme('xmas'));
-            document.getElementById('theme-cny').addEventListener('click', () => switchTheme('cny'));
-        }
-    </script>
-</body>
-</html>
+            const fsBtn
