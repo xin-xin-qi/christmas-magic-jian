@@ -39,12 +39,12 @@
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); margin-top: 30px; transition: transform 0.2s;
         }
         #btn-start:hover { transform: scale(1.05); }
-        #photo-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
-            max-width: 80%; max-height: 80%; background: #fff; padding: 10px 10px 40px 10px;
+               #photo-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+            max-width: 90vw; max-height: 90vh; background: #fff; padding: 20px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.8); z-index: 150;
-            opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border-radius: 4px;
+            opacity: 0; pointer-events: none; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 12px;
         }
         #photo-modal.active { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-3deg); }
         #photo-modal img { max-width: 100%; max-height: 60vh; display: block; }
@@ -882,3 +882,4 @@
     </script>
 </body>
 </html>
+
