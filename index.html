@@ -272,26 +272,80 @@
             // ===========================================
             
             // 原有的预加载逻辑保持不变
-            setTimeout(() => {
-                const preloaded = document.getElementById('preloaded-photos');
-                if(preloaded) {
-                    const imgs = preloaded.getElementsByTagName('img');
-                    for(let img of imgs) {
-                        const newImg = new Image();
-                        newImg.src = img.src;
-                        newImg.onload = () => {
-                            loadedImages.push(newImg);
-                            if(loadedImages.length === imgs.length) {
-                                console.log(`已预加载 ${loadedImages.length} 张照片`);
-                                // 注意：updatePhotos() 现在由上面的代码触发，这里不再调用
-                            }
-                        };
-                        newImg.onerror = () => {
-                            console.log(`加载失败: ${img.src}`);
-                        };
-                    }
+           // 替换掉上面那个setTimeout代码块
+setTimeout(() => {
+    const preloaded = document.getElementById('preloaded-photos');
+    if(preloaded) {
+        const imgs = preloaded.getElementsByTagName('img');
+        // 清空已加载的图片数组，从头开始按标准流程加载
+        loadedImages = [];
+        
+        // 为每张预置图片创建一个Image对象，并模拟手动导入的处理流程
+        Array.from(imgs).forEach((imgElement) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous'; // 处理可能的跨域问题
+            img.src = imgElement.src;
+            
+            img.onload = () => {
+                // 核心：为每张图片创建圆形画布
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                
+                // 1. 创建圆形裁剪区域
+                ctx.beginPath();
+                ctx.arc(128, 128, 120, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+                
+                // 2. 计算并绘制图片（保持比例居中）
+                const asp = img.width / img.height;
+                let drawWidth, drawHeight, offsetX, offsetY;
+                
+                if (asp > 1) {
+                    // 宽图
+                    drawHeight = img.height;
+                    drawWidth = img.height;
+                    offsetX = (img.width - img.height) / 2;
+                    offsetY = 0;
+                } else {
+                    // 高图或方图
+                    drawWidth = img.width;
+                    drawHeight = img.width;
+                    offsetX = 0;
+                    offsetY = (img.height - img.width) / 2;
                 }
-            }, 1000);
+                
+                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, 256, 256);
+                
+                // 3. 绘制圆形边框（根据主题风格）
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff';
+                ctx.stroke();
+                
+                // 4. 创建一个新的Image对象，使用处理好的画布数据
+                const processedImage = new Image();
+                processedImage.src = canvas.toDataURL('image/png'); // 转换为Data URL
+                
+                processedImage.onload = () => {
+                    loadedImages.push(processedImage);
+                    console.log(`预加载并处理照片: ${imgElement.src}`);
+                    
+                    // 当所有照片都处理完毕时，调用updatePhotos
+                    if (loadedImages.length === imgs.length) {
+                        console.log(`所有 ${loadedImages.length} 张照片已处理完成，准备挂载。`);
+                        updatePhotos(); // 确保调用挂载函数
+                    }
+                };
+            };
+            
+            img.onerror = (err) => {
+                console.error('预加载图片失败:', imgElement.src, err);
+            };
+        });
+    }
+}, 1000);
         }
         function createParticles() {
             if(particleSystem) { treeGroup.remove(particleSystem); particleSystem.geometry.dispose(); }
@@ -492,5 +546,6 @@
     </script>
 </body>
 </html>
+
 
 
