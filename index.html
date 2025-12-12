@@ -231,12 +231,9 @@
     </script>
     <script>
         const state = { 
-    explosion: 0.0, targetExplosion: 0.0, photoActive: false, treeHeight: 70, rotationSpeed: 0.002,
-    style: 'xmas'
-};
-
-// 新增：原始照片缓存数组
-let originalPhotosCache = [];
+            explosion: 0.0, targetExplosion: 0.0, photoActive: false, treeHeight: 70, rotationSpeed: 0.002,
+            style: 'xmas'
+        };
         let scene, camera, renderer, clock;
         let particleSystem, treeGroup, topDecoration;
         let photoMeshes = [], loadedImages = [];
@@ -294,86 +291,80 @@ let originalPhotosCache = [];
             
             // ========== 修复：移除重复的照片处理代码，只保留一个 ==========
             setTimeout(() => {
-    const preloaded = document.getElementById('preloaded-photos');
-    if(preloaded) {
-        const imgs = preloaded.getElementsByTagName('img');
-        loadedImages = [];
-        originalPhotosCache = []; // 清空缓存
-        
-        // 计数器，确保所有图片加载完成
-        let loadedCount = 0;
-        const totalImages = imgs.length;
-        
-        Array.from(imgs).forEach((imgElement) => {
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.src = imgElement.src;
-            
-            img.onload = () => {
-                // 1. 先保存原始图片到缓存
-                originalPhotosCache.push(img);
-                
-                // 2. 原有的圆形处理代码（用于树上显示）
-                const canvas = document.createElement('canvas');
-                canvas.width = 256;
-                canvas.height = 256;
-                const ctx = canvas.getContext('2d');
-                
-                // 创建圆形裁剪区域
-                ctx.beginPath();
-                ctx.arc(128, 128, 120, 0, Math.PI * 2);
-                ctx.closePath();
-                ctx.clip();
-                
-                // 计算并绘制图片（保持比例居中）
-                const asp = img.width / img.height;
-                let drawWidth, drawHeight, offsetX, offsetY;
-                
-                if (asp > 1) {
-                    // 宽图
-                    drawHeight = img.height;
-                    drawWidth = img.height;
-                    offsetX = (img.width - img.height) / 2;
-                    offsetY = 0;
-                } else {
-                    // 高图或方图
-                    drawWidth = img.width;
-                    drawHeight = img.width;
-                    offsetX = 0;
-                    offsetY = (img.height - img.width) / 2;
-                }
-                
-                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, 256, 256);
-                
-                // 绘制圆形边框（根据当前主题风格）
-                ctx.lineWidth = 10;
-                ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff';
-                ctx.stroke();
-                
-                // 创建处理好的图片对象（用于树上显示）
-                const processedImage = new Image();
-                processedImage.src = canvas.toDataURL('image/png');
-                
-                processedImage.onload = () => {
-                    loadedImages.push(processedImage);
-                    loadedCount++;
+                const preloaded = document.getElementById('preloaded-photos');
+                if(preloaded) {
+                    const imgs = preloaded.getElementsByTagName('img');
+                    loadedImages = [];
                     
-                    // 当所有照片都处理完毕时，调用updatePhotos
-                    if (loadedCount === totalImages) {
-                        console.log(`所有 ${loadedImages.length} 张照片已处理完成。`);
-                        console.log(`原始图片缓存：${originalPhotosCache.length} 张`);
-                        updatePhotos();
-                    }
-                };
-            };
-            
-            img.onerror = (err) => {
-                console.error('预加载图片失败:', imgElement.src, err);
-                loadedCount++; // 即使失败也要计数，防止卡住
-            };
-        });
-    }
-}, 1000);
+                    // 计数器，确保所有图片加载完成
+                    let loadedCount = 0;
+                    const totalImages = imgs.length;
+                    
+                    Array.from(imgs).forEach((imgElement) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.src = imgElement.src;
+                        
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = 256;
+                            canvas.height = 256;
+                            const ctx = canvas.getContext('2d');
+                            
+                            // 创建圆形裁剪区域
+                            ctx.beginPath();
+                            ctx.arc(128, 128, 120, 0, Math.PI * 2);
+                            ctx.closePath();
+                            ctx.clip();
+                            
+                            // 计算并绘制图片（保持比例居中）
+                            const asp = img.width / img.height;
+                            let drawWidth, drawHeight, offsetX, offsetY;
+                            
+                            if (asp > 1) {
+                                // 宽图
+                                drawHeight = img.height;
+                                drawWidth = img.height;
+                                offsetX = (img.width - img.height) / 2;
+                                offsetY = 0;
+                            } else {
+                                // 高图或方图
+                                drawWidth = img.width;
+                                drawHeight = img.width;
+                                offsetX = 0;
+                                offsetY = (img.height - img.width) / 2;
+                            }
+                            
+                            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, 256, 256);
+                            
+                            // 绘制圆形边框（根据当前主题风格）
+                            ctx.lineWidth = 10;
+                            ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff';
+                            ctx.stroke();
+                            
+                            // 创建处理好的图片对象
+                            const processedImage = new Image();
+                            processedImage.src = canvas.toDataURL('image/png');
+                            
+                            processedImage.onload = () => {
+                                loadedImages.push(processedImage);
+                                loadedCount++;
+                                
+                                // 当所有照片都处理完毕时，调用updatePhotos
+                                if (loadedCount === totalImages) {
+                                    console.log(`所有 ${loadedImages.length} 张照片已处理完成，准备挂载。`);
+                                    updatePhotos();
+                                }
+                            };
+                        };
+                        
+                        img.onerror = (err) => {
+                            console.error('预加载图片失败:', imgElement.src, err);
+                            loadedCount++; // 即使失败也要计数，防止卡住
+                        };
+                    });
+                }
+            }, 1000);
         }
         
         function createParticles() {
@@ -711,28 +702,24 @@ let originalPhotosCache = [];
                             statusText += `🖐️ 左手: ${state.targetExplosion > 0.5 ? "爆炸" : "还原"}  `;
                         }
                         
-                    if (label === 'Right') {
-    const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
-    
-    if (pinchDist < 0.05) {
-        if (!state.photoActive) {
-            showRandomPhoto();
-            state.photoActive = true;
-            state.photoLock = true;  // 新增：加锁，防止重复触发
-        }
-        statusText += `| 👌 右手: 捏合提取 `;
-    } else if (pinchDist > 0.08) {
-        if (state.photoActive) {
-            // 只有松开时才移除模态框
-            document.getElementById('photo-modal').classList.remove('active');
-            state.photoActive = false;
-            state.photoLock = false;  // 新增：解锁，允许下次捏合
-        }
-        statusText += `| ✋ 右手: 松开 `;
-    } else {
-        statusText += `| ✋ 右手: 就绪 `;
-    }
-}
+                        if (label === 'Right') {
+                            const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
+                            if (pinchDist < 0.05) {
+                                if (!state.photoActive) {
+                                    showRandomPhoto();
+                                    state.photoActive = true;
+                                }
+                                statusText += `| 👌 右手: 捏合提取 `;
+                            } else if (pinchDist > 0.08) {
+                                if (state.photoActive) {
+                                    document.getElementById('photo-modal').classList.remove('active');
+                                    state.photoActive = false;
+                                }
+                                statusText += `| ✋ 右手: 松开 `;
+                            } else {
+                                statusText += `| ✋ 右手: 就绪 `;
+                            }
+                        }
                     }
                 } else {
                     statusText = "👀 等待双手...";
@@ -752,29 +739,13 @@ let originalPhotosCache = [];
             cameraUtils.start();
         }
         
-function showRandomPhoto() {
-    if(loadedImages.length === 0) return;
-    
-    // 直接从预加载的DOM中获取原始图片（不是处理过的圆形图片）
-    const preloadedDiv = document.getElementById('preloaded-photos');
-    const allOriginalImgs = preloadedDiv.getElementsByTagName('img');
-    
-    if (allOriginalImgs.length > 0) {
-        // 随机选择一个原始图片
-        const randomIndex = Math.floor(Math.random() * allOriginalImgs.length);
-        const originalImg = allOriginalImgs[randomIndex];
-        
-        const modal = document.getElementById('photo-modal');
-        const modalImg = document.getElementById('modal-img');
-        
-        // 使用原始图片的src（这是GitHub上的原始图片，不是圆形处理的）
-        modalImg.src = originalImg.src;
-        modal.classList.add('active');
-        
-        console.log('显示原始图片（矩形形状）:', originalImg.src);
-    }
-}
-}
+        function showRandomPhoto() {
+            if(loadedImages.length === 0) return;
+            const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
+            const modal = document.getElementById('photo-modal');
+            document.getElementById('modal-img').src = img.src;
+            modal.classList.add('active');
+        }
         
         function setupUI() {
             // 全屏按钮
@@ -911,6 +882,3 @@ function showRandomPhoto() {
     </script>
 </body>
 </html>
-
-
-
