@@ -739,13 +739,28 @@
             cameraUtils.start();
         }
         
-        function showRandomPhoto() {
-            if(loadedImages.length === 0) return;
-            const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
-            const modal = document.getElementById('photo-modal');
-            document.getElementById('modal-img').src = img.src;
-            modal.classList.add('active');
-        }
+function showRandomPhoto() {
+    if(loadedImages.length === 0) return;
+    
+    // 直接从预加载的DOM中获取原始图片（不是处理过的圆形图片）
+    const preloadedDiv = document.getElementById('preloaded-photos');
+    const allOriginalImgs = preloadedDiv.getElementsByTagName('img');
+    
+    if (allOriginalImgs.length > 0) {
+        // 随机选择一个原始图片
+        const randomIndex = Math.floor(Math.random() * allOriginalImgs.length);
+        const originalImg = allOriginalImgs[randomIndex];
+        
+        const modal = document.getElementById('photo-modal');
+        const modalImg = document.getElementById('modal-img');
+        
+        // 使用原始图片的src（这是GitHub上的原始图片，不是圆形处理的）
+        modalImg.src = originalImg.src;
+        modal.classList.add('active');
+        
+        console.log('显示原始图片（矩形形状）:', originalImg.src);
+    }
+}
         
         function setupUI() {
             // 全屏按钮
@@ -882,3 +897,4 @@
     </script>
 </body>
 </html>
+
