@@ -702,24 +702,28 @@
                             statusText += `🖐️ 左手: ${state.targetExplosion > 0.5 ? "爆炸" : "还原"}  `;
                         }
                         
-                        if (label === 'Right') {
-                            const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
-                            if (pinchDist < 0.05) {
-                                if (!state.photoActive) {
-                                    showRandomPhoto();
-                                    state.photoActive = true;
-                                }
-                                statusText += `| 👌 右手: 捏合提取 `;
-                            } else if (pinchDist > 0.08) {
-                                if (state.photoActive) {
-                                    document.getElementById('photo-modal').classList.remove('active');
-                                    state.photoActive = false;
-                                }
-                                statusText += `| ✋ 右手: 松开 `;
-                            } else {
-                                statusText += `| ✋ 右手: 就绪 `;
-                            }
-                        }
+                    if (label === 'Right') {
+    const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
+    
+    if (pinchDist < 0.05) {
+        if (!state.photoActive) {
+            showRandomPhoto();
+            state.photoActive = true;
+            state.photoLock = true;  // 新增：加锁，防止重复触发
+        }
+        statusText += `| 👌 右手: 捏合提取 `;
+    } else if (pinchDist > 0.08) {
+        if (state.photoActive) {
+            // 只有松开时才移除模态框
+            document.getElementById('photo-modal').classList.remove('active');
+            state.photoActive = false;
+            state.photoLock = false;  // 新增：解锁，允许下次捏合
+        }
+        statusText += `| ✋ 右手: 松开 `;
+    } else {
+        statusText += `| ✋ 右手: 就绪 `;
+    }
+}
                     }
                 } else {
                     statusText = "👀 等待双手...";
@@ -897,4 +901,5 @@ function showRandomPhoto() {
     </script>
 </body>
 </html>
+
 
