@@ -269,6 +269,65 @@
         
         function initThree() {
             clock = new THREE.Clock();
+              // ========== 新增：预加载所有原始图片 ==========
+    // 这个函数会提前加载所有原始图片到内存中
+    function preloadOriginalImages() {
+        // 1. 找到预加载图片的容器
+        const preloadedDiv = document.getElementById('preloaded-photos');
+        if (!preloadedDiv) {
+            console.warn('找不到预加载图片容器');
+            return;
+        }
+        
+        // 2. 获取所有图片元素
+        const imgElements = preloadedDiv.getElementsByTagName('img');
+        console.log(`找到 ${imgElements.length} 张原始图片需要预加载`);
+        
+        // 3. 创建全局数组来存储预加载的图片对象
+        window.preloadedOriginalImages = [];
+        window.preloadedImageStatus = {
+            total: imgElements.length,
+            loaded: 0,
+            failed: 0
+        };
+        
+        // 4. 遍历所有图片并开始加载
+        Array.from(imgElements).forEach((imgElement, index) => {
+            // 创建新的Image对象
+            const img = new Image();
+            img.crossOrigin = 'anonymous';  // 允许跨域
+            img.dataset.index = index;      // 保存索引
+            
+            // 设置加载成功回调
+            img.onload = function() {
+                window.preloadedImageStatus.loaded++;
+                console.log(`✅ 原始图片 ${index + 1}/${imgElements.length} 预加载完成`);
+                
+                // 如果所有图片都加载完成
+                if (window.preloadedImageStatus.loaded === imgElements.length) {
+                    console.log('🎉 所有原始图片预加载完成！');
+                    document.getElementById('status-bar').innerText = 
+                        `已预加载 ${window.preloadedImageStatus.loaded} 张原始照片`;
+                }
+            };
+            
+            // 设置加载失败回调
+            img.onerror = function(err) {
+                window.preloadedImageStatus.failed++;
+                console.error(`❌ 原始图片 ${index + 1} 预加载失败:`, imgElement.src, err);
+            };
+            
+            // 开始加载（设置src就会开始加载）
+            img.src = imgElement.src;
+            
+            // 保存到全局数组
+            window.preloadedOriginalImages.push(img);
+        });
+    }
+    
+    // 立即执行预加载
+    preloadOriginalImages();
+    // ========== 预加载代码结束 ==========
             scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x000000, 0.004);
             
@@ -749,28 +808,74 @@
             cameraUtils.start();
         }
         
-        function showRandomPhoto() {
-    if(loadedImages.length === 0) return;
+       function showRandomPhoto() {
+    console.log('showRandomPhoto 被调用');
     
-    // 1. 先尝试获取预加载的原始图片
+    // ========== 方案A：使用预加载的原始图片 ==========
+    if (window.preloadedOriginalImages && window.preloadedOriginalImages.length > 0) {
+        console.log('使用预加载的原始图片');
+        
+        // 随机选择一个索引
+        const randomIndex = Math.floor(Math.random() * window.preloadedOriginalImages.length);
+        const originalImg = window.preloadedOriginalImages[randomIndex];
+        
+        console.log(`选择了第 ${randomIndex + 1} 张图片，状态：`, {
+            complete: originalImg.complete,
+            naturalWidth: originalImg.naturalWidth,
+            src: originalImg.src.substring(0, 50) + '...' // 只显示前50个字符
+        });
+        
+        // 检查图片是否已完全加载
+        if (originalImg.complete && originalImg.naturalWidth > 0) {
+            // 图片已加载完成，直接使用
+            document.getElementById('modal-img').src = originalImg.src;
+            document.getElementById('photo-modal').classList.add('active');
+            console.log('✅ 直接显示已加载的图片');
+        } else {
+            // 图片可能还在加载中（理论上不应该发生，因为我们已经预加载了）
+            console.warn('图片未完全加载，使用备用方案');
+            
+            // 备用：使用原始的DOM元素
+            const preloadedDiv = document.getElementById('preloaded-photos');
+            if (preloadedDiv) {
+                const originalImgs = preloadedDiv.getElementsByTagName('img');
+                if (originalImgs.length > randomIndex) {
+                    document.getElementById('modal-img').src = originalImgs[randomIndex].src;
+                    document.getElementById('photo-modal').classList.add('active');
+                    console.log('🔄 使用DOM中的图片');
+                }
+            }
+        }
+        return; // 重要！使用预加载图片后直接返回
+    }
+    
+    // ========== 方案B：如果没有预加载，直接使用DOM元素 ==========
+    console.log('没有预加载的图片，使用DOM元素');
     const preloadedDiv = document.getElementById('preloaded-photos');
-    if(preloadedDiv) {
+    if (preloadedDiv) {
         const originalImgs = preloadedDiv.getElementsByTagName('img');
-        if(originalImgs.length > 0) {
-            // 随机选择一张原始图片
+        if (originalImgs.length > 0) {
             const randomIndex = Math.floor(Math.random() * originalImgs.length);
             const originalImg = originalImgs[randomIndex];
             
             document.getElementById('modal-img').src = originalImg.src;
             document.getElementById('photo-modal').classList.add('active');
-            return; // 重要：找到就返回，不再执行后面的代码
+            console.log('使用DOM图片成功');
+            return;
         }
     }
     
-    // 2. 如果没有预加载图片（理论上不会到这里），使用原来的逻辑
+    // ========== 方案C：最后的备用方案（使用处理后的圆形图片） ==========
+    console.log('使用处理后的圆形图片');
+    if (loadedImages.length === 0) {
+        console.warn('没有可用的图片');
+        return;
+    }
+    
     const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
     document.getElementById('modal-img').src = img.src;
     document.getElementById('photo-modal').classList.add('active');
+    console.log('显示处理后的圆形图片');
 }
         
         function setupUI() {
@@ -908,3 +1013,4 @@
     </script>
 </body>
 </html>
+
