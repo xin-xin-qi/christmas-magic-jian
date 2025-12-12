@@ -702,24 +702,34 @@
                             statusText += `🖐️ 左手: ${state.targetExplosion > 0.5 ? "爆炸" : "还原"}  `;
                         }
                         
-                        if (label === 'Right') {
-                            const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
-                            if (pinchDist < 0.05) {
-                                if (!state.photoActive) {
-                                    showRandomPhoto();
-                                    state.photoActive = true;
-                                }
-                                statusText += `| 👌 右手: 捏合提取 `;
-                            } else if (pinchDist > 0.08) {
-                                if (state.photoActive) {
-                                    document.getElementById('photo-modal').classList.remove('active');
-                                    state.photoActive = false;
-                                }
-                                statusText += `| ✋ 右手: 松开 `;
-                            } else {
-                                statusText += `| ✋ 右手: 就绪 `;
-                            }
-                        }
+                       if (label === 'Right') {
+    const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
+    
+    // 添加一个状态标记，记录上一次是否是捏合状态
+    if (!window.lastPinchState) window.lastPinchState = false;
+    
+    if (pinchDist < 0.05) {
+        // 只有在从"非捏合"变为"捏合"时才触发
+        if (!window.lastPinchState) {
+            if (!state.photoActive) {
+                showRandomPhoto();
+                state.photoActive = true;
+            }
+            window.lastPinchState = true; // 标记为已捏合
+        }
+        statusText += `| 👌 右手: 捏合提取 `;
+    } else if (pinchDist > 0.08) {
+        if (state.photoActive) {
+            document.getElementById('photo-modal').classList.remove('active');
+            state.photoActive = false;
+        }
+        window.lastPinchState = false; // 重置捏合状态
+        statusText += `| ✋ 右手: 松开 `;
+    } else {
+        statusText += `| ✋ 右手: 就绪 `;
+        window.lastPinchState = false; // 中间状态也重置
+    }
+}
                     }
                 } else {
                     statusText = "👀 等待双手...";
@@ -739,7 +749,7 @@
             cameraUtils.start();
         }
         
-       function showRandomPhoto() {
+        function showRandomPhoto() {
     if(loadedImages.length === 0) return;
     
     // 1. 先尝试获取预加载的原始图片
@@ -898,4 +908,3 @@
     </script>
 </body>
 </html>
-
