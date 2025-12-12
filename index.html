@@ -290,81 +290,41 @@
             animate();
             
             // ========== 修复：移除重复的照片处理代码，只保留一个 ==========
-            setTimeout(() => {
-                const preloaded = document.getElementById('preloaded-photos');
-                if(preloaded) {
-                    const imgs = preloaded.getElementsByTagName('img');
-                    loadedImages = [];
-                    
-                    // 计数器，确保所有图片加载完成
-                    let loadedCount = 0;
-                    const totalImages = imgs.length;
-                    
-                    Array.from(imgs).forEach((imgElement) => {
-                        const img = new Image();
-                        img.crossOrigin = 'anonymous';
-                        img.src = imgElement.src;
-                        
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = 256;
-                            canvas.height = 256;
-                            const ctx = canvas.getContext('2d');
-                            
-                            // 创建圆形裁剪区域
-                            ctx.beginPath();
-                            ctx.arc(128, 128, 120, 0, Math.PI * 2);
-                            ctx.closePath();
-                            ctx.clip();
-                            
-                            // 计算并绘制图片（保持比例居中）
-                            const asp = img.width / img.height;
-                            let drawWidth, drawHeight, offsetX, offsetY;
-                            
-                            if (asp > 1) {
-                                // 宽图
-                                drawHeight = img.height;
-                                drawWidth = img.height;
-                                offsetX = (img.width - img.height) / 2;
-                                offsetY = 0;
-                            } else {
-                                // 高图或方图
-                                drawWidth = img.width;
-                                drawHeight = img.width;
-                                offsetX = 0;
-                                offsetY = (img.height - img.width) / 2;
-                            }
-                            
-                            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, 256, 256);
-                            
-                            // 绘制圆形边框（根据当前主题风格）
-                            ctx.lineWidth = 10;
-                            ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff';
-                            ctx.stroke();
-                            
-                            // 创建处理好的图片对象
-                            const processedImage = new Image();
-                            processedImage.src = canvas.toDataURL('image/png');
-                            
-                            processedImage.onload = () => {
-                                loadedImages.push(processedImage);
-                                loadedCount++;
-                                
-                                // 当所有照片都处理完毕时，调用updatePhotos
-                                if (loadedCount === totalImages) {
-                                    console.log(`所有 ${loadedImages.length} 张照片已处理完成，准备挂载。`);
-                                    updatePhotos();
-                                }
-                            };
-                        };
-                        
-                        img.onerror = (err) => {
-                            console.error('预加载图片失败:', imgElement.src, err);
-                            loadedCount++; // 即使失败也要计数，防止卡住
-                        };
-                    });
+           // ========== 修改：简化预加载照片处理 ==========
+setTimeout(() => {
+    const preloaded = document.getElementById('preloaded-photos');
+    if(preloaded) {
+        const imgs = preloaded.getElementsByTagName('img');
+        loadedImages = [];
+        
+        // 计数器，确保所有图片加载完成
+        let loadedCount = 0;
+        const totalImages = imgs.length;
+        
+        Array.from(imgs).forEach((imgElement) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.src = imgElement.src;
+            
+            img.onload = () => {
+                // 直接将原始图片保存到数组（不进行圆形处理）
+                loadedImages.push(img);
+                loadedCount++;
+                
+                // 当所有照片都处理完毕时，调用updatePhotos
+                if (loadedCount === totalImages) {
+                    console.log(`所有 ${loadedImages.length} 张照片已加载完成。`);
+                    updatePhotos();
                 }
-            }, 1000);
+            };
+            
+            img.onerror = (err) => {
+                console.error('预加载图片失败:', imgElement.src, err);
+                loadedCount++; // 即使失败也要计数，防止卡住
+            };
+        });
+    }
+}, 1000);
         }
         
         function createParticles() {
@@ -557,40 +517,52 @@
             
             if(loadedImages.length === 0) return;
             
-            loadedImages.forEach(img => {
-                const cvs = document.createElement('canvas');
-                cvs.width = 256;
-                cvs.height = 256;
-                const ctx = cvs.getContext('2d');
-                
-                // 创建圆形裁剪区域
-                ctx.beginPath();
-                ctx.arc(128, 128, 120, 0, Math.PI*2);
-                ctx.clip();
-                
-                // 计算并绘制图片
-                const asp = img.width/img.height;
-                if(asp > 1) {
-                    ctx.drawImage(img, (img.width-img.height)/2, 0, img.height, img.height, 0, 0, 256, 256);
-                } else {
-                    ctx.drawImage(img, 0, (img.height-img.width)/2, img.width, img.width, 0, 0, 256, 256);
-                }
-                
-                // 修复：确保边框颜色与主题一致
-                ctx.lineWidth = 10;
-                ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff';
-                ctx.stroke();
-                
-                const mesh = new THREE.Mesh(
-                    new THREE.PlaneGeometry(6,6),
-                    new THREE.MeshBasicMaterial({
-                        map: new THREE.CanvasTexture(cvs),
-                        side: THREE.DoubleSide,
-                        transparent: true,
-                        depthWrite: false,
-                        depthTest: false
-                    })
-                );
+           loadedImages.forEach(img => {
+    // 在内存中创建临时画布进行圆形处理（仅用于挂在树上）
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 256;
+    tempCanvas.height = 256;
+    const ctx = tempCanvas.getContext('2d');
+    
+    // 创建圆形裁剪区域（仅用于树上显示）
+    ctx.beginPath();
+    ctx.arc(128, 128, 120, 0, Math.PI*2);
+    ctx.clip();
+    
+    // 计算并绘制图片
+    const asp = img.width/img.height;
+    if(asp > 1) {
+        ctx.drawImage(img, (img.width-img.height)/2, 0, img.height, img.height, 0, 0, 256, 256);
+    } else {
+        ctx.drawImage(img, 0, (img.height-img.width)/2, img.width, img.width, 0, 0, 256, 256);
+    }
+    
+    // 绘制边框（根据当前主题）
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff';
+    ctx.stroke();
+    
+    // 保存原始图片引用，供捏取时使用
+    const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(6,6),
+        new THREE.MeshBasicMaterial({
+            map: new THREE.CanvasTexture(tempCanvas),
+            side: THREE.DoubleSide,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false
+        })
+    );
+    
+    mesh.userData = {
+        origin: origin,
+        explodePos: explodeDir,
+        imgSrc: img.src, // 保存原始图片URL
+        rawImage: img    // 新增：保存原始图片对象
+    };
+    
+    // ... 省略部分代码 ...
+});
                 
                 const y = Math.random() * (state.treeHeight * 0.8);
                 const r = (1 - y/state.treeHeight) * (state.treeHeight*0.4) + 2;
@@ -739,13 +711,29 @@
             cameraUtils.start();
         }
         
-        function showRandomPhoto() {
-            if(loadedImages.length === 0) return;
-            const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
-            const modal = document.getElementById('photo-modal');
-            document.getElementById('modal-img').src = img.src;
-            modal.classList.add('active');
-        }
+      function showRandomPhoto() {
+    if(photoMeshes.length === 0) return;
+    
+    // 随机选择一个照片网格
+    const randomMesh = photoMeshes[Math.floor(Math.random() * photoMeshes.length)];
+    const modal = document.getElementById('photo-modal');
+    const modalImg = document.getElementById('modal-img');
+    
+    // 使用原始图片（不经过圆形处理）
+    if (randomMesh.userData.rawImage) {
+        modalImg.src = randomMesh.userData.rawImage.src;
+    } else if (randomMesh.userData.imgSrc) {
+        modalImg.src = randomMesh.userData.imgSrc;
+    }
+    
+    // 确保显示原始矩形形状
+    modalImg.style.borderRadius = '0';
+    modalImg.style.objectFit = 'contain';
+    modalImg.style.width = '100%';
+    modalImg.style.height = '100%';
+    
+    modal.classList.add('active');
+}
         
         function setupUI() {
             // 全屏按钮
@@ -882,3 +870,4 @@
     </script>
 </body>
 </html>
+
