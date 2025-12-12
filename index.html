@@ -290,8 +290,95 @@
             animate();
             
             // ========== 修复：移除重复的照片处理代码，只保留一个 ==========
+                        // ========== 新的预加载照片处理 ==========
             setTimeout(() => {
                 const preloaded = document.getElementById('preloaded-photos');
+                if(preloaded) {
+                    const imgs = preloaded.getElementsByTagName('img');
+                    state.originalPhotos = []; // 存储原始照片
+                    loadedImages = []; // 存储圆形版本
+                    
+                    console.log(`发现 ${imgs.length} 张预加载照片`);
+                    
+                    // 遍历每张照片
+                    Array.from(imgs).forEach((imgElement, index) => {
+                        console.log(`处理第 ${index + 1} 张照片: ${imgElement.src}`);
+                        
+                        // 1. 加载原始图片
+                        const originalImg = new Image();
+                        originalImg.crossOrigin = 'anonymous';
+                        originalImg.src = imgElement.src;
+                        
+                        originalImg.onload = () => {
+                            console.log(`✓ 原始照片加载完成: ${originalImg.width}x${originalImg.height}`);
+                            
+                            // 重要：保存原始照片（用于捏取显示）
+                            state.originalPhotos.push({
+                                url: imgElement.src,
+                                width: originalImg.width,
+                                height: originalImg.height,
+                                element: originalImg
+                            });
+                            
+                            // 2. 创建圆形版本（用于树上显示）
+                            const canvas = document.createElement('canvas');
+                            canvas.width = 256;
+                            canvas.height = 256;
+                            const ctx = canvas.getContext('2d');
+                            
+                            // 画圆形
+                            ctx.beginPath();
+                            ctx.arc(128, 128, 120, 0, Math.PI * 2);
+                            ctx.closePath();
+                            ctx.clip();
+                            
+                            // 计算如何绘制图片
+                            const asp = originalImg.width / originalImg.height;
+                            if (asp > 1) {
+                                // 宽图
+                                const size = originalImg.height;
+                                ctx.drawImage(
+                                    originalImg, 
+                                    (originalImg.width - size)/2, 0, size, size, 
+                                    0, 0, 256, 256
+                                );
+                            } else {
+                                // 高图
+                                const size = originalImg.width;
+                                ctx.drawImage(
+                                    originalImg,
+                                    0, (originalImg.height - size)/2, size, size,
+                                    0, 0, 256, 256
+                                );
+                            }
+                            
+                            // 画边框
+                            ctx.lineWidth = 10;
+                            ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff';
+                            ctx.stroke();
+                            
+                            // 3. 保存圆形版本到loadedImages
+                            const circularImg = new Image();
+                            circularImg.src = canvas.toDataURL('image/png');
+                            
+                            circularImg.onload = () => {
+                                loadedImages.push(circularImg);
+                                console.log(`✓ 圆形版本创建完成`);
+                                
+                                // 当所有照片都处理完
+                                if (loadedImages.length === imgs.length) {
+                                    console.log(`🎉 所有 ${loadedImages.length} 张照片准备完毕！`);
+                                    updatePhotos(); // 挂到树上
+                                }
+                            };
+                        };
+                        
+                        originalImg.onerror = () => {
+                            console.error(`❌ 照片加载失败: ${imgElement.src}`);
+                        };
+                    });
+                }
+            }, 1000);
                 if(preloaded) {
                     const imgs = preloaded.getElementsByTagName('img');
                     loadedImages = [];
@@ -738,8 +825,48 @@
             });
             cameraUtils.start();
         }
-        
-        function showRandomPhoto() {
+                function showRandomPhoto() {
+            console.log("开始显示随机照片...");
+            
+            // 合并所有照片
+            const allPhotos = [...state.originalPhotos, ...state.importedPhotos];
+            console.log(`总照片数: ${allPhotos.length} (预加载: ${state.originalPhotos.length}, 导入: ${state.importedPhotos.length})`);
+            
+            if (allPhotos.length === 0) {
+                document.getElementById('status-bar').innerText = "😢 没有照片可显示";
+                return;
+            }
+            
+            // 随机选择一张
+            const randomIndex = Math.floor(Math.random() * allPhotos.length);
+            const selectedPhoto = allPhotos[randomIndex];
+            
+            console.log(`选择了第 ${randomIndex + 1} 张照片: ${selectedPhoto.name || '预加载照片'}`);
+            console.log(`尺寸: ${selectedPhoto.width}x${selectedPhoto.height}`);
+            
+            // 显示照片
+            const modal = document.getElementById('photo-modal');
+            const modalImg = document.getElementById('modal-img');
+            
+            // 使用原始照片（不是圆形版本！）
+            modalImg.src = selectedPhoto.url;
+            
+            // 调整显示大小
+            modalImg.style.maxWidth = '85vw';
+            modalImg.style.maxHeight = '80vh';
+            modalImg.style.width = 'auto';
+            modalImg.style.height = 'auto';
+            
+            // 显示模态框
+            modal.classList.add('active');
+            state.photoActive = true;
+            
+            // 更新状态
+            document.getElementById('status-bar').innerText = 
+                "📸 正在显示照片 (点击×关闭)";
+            
+            console.log("✅ 照片显示完成");
+        }
             if(loadedImages.length === 0) return;
             const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
             const modal = document.getElementById('photo-modal');
@@ -804,7 +931,94 @@
             });
             
             // 照片导入
+                        // 照片导入处理
             document.getElementById('folder-input').addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                
+                console.log(`开始导入 ${files.length} 张照片`);
+                
+                // 限制最多30张
+                const limitedFiles = files.slice(0, 30);
+                
+                // 处理每张照片
+                limitedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            console.log(`✓ 导入照片 ${index + 1}: ${file.name} (${img.width}x${img.height})`);
+                            
+                            // 重要：保存原始照片
+                            state.importedPhotos.push({
+                                url: e.target.result,
+                                width: img.width,
+                                height: img.height,
+                                element: img,
+                                name: file.name
+                            });
+                            
+                            // 创建圆形版本
+                            const canvas = document.createElement('canvas');
+                            canvas.width = 256;
+                            canvas.height = 256;
+                            const ctx = canvas.getContext('2d');
+                            
+                            ctx.beginPath();
+                            ctx.arc(128, 128, 120, 0, Math.PI * 2);
+                            ctx.closePath();
+                            ctx.clip();
+                            
+                            const asp = img.width / img.height;
+                            if (asp > 1) {
+                                const size = img.height;
+                                ctx.drawImage(
+                                    img, 
+                                    (img.width - size)/2, 0, size, size, 
+                                    0, 0, 256, 256
+                                );
+                            } else {
+                                const size = img.width;
+                                ctx.drawImage(
+                                    img,
+                                    0, (img.height - size)/2, size, size,
+                                    0, 0, 256, 256
+                                );
+                            }
+                            
+                            ctx.lineWidth = 10;
+                            ctx.strokeStyle = state.style === 'cny' ? '#ffd700' : '#ffffff';
+                            ctx.stroke();
+                            
+                            const circularImg = new Image();
+                            circularImg.src = canvas.toDataURL('image/png');
+                            
+                            circularImg.onload = () => {
+                                loadedImages.push(circularImg);
+                                console.log(`✓ 圆形版本创建完成`);
+                                
+                                // 当处理完所有导入的照片
+                                if (index === limitedFiles.length - 1) {
+                                    console.log(`🎉 导入完成！总共 ${loadedImages.length} 张照片`);
+                                    updatePhotos();
+                                    
+                                    document.getElementById('status-bar').innerText = 
+                                        `已导入 ${limitedFiles.length} 张照片`;
+                                    setTimeout(() => {
+                                        document.getElementById('status-bar').innerText = 
+                                            "等待双手识别...";
+                                    }, 2000);
+                                }
+                            };
+                        };
+                        
+                        img.src = e.target.result;
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+            });
                 const files = Array.from(e.target.files);
                 loadedImages = [];
                 let loadedCount = 0;
@@ -882,4 +1096,5 @@
     </script>
 </body>
 </html>
+
 
